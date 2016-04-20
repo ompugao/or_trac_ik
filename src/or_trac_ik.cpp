@@ -3,13 +3,11 @@
 #include <iostream>
 #include <ros/ros.h>
 
-#include <kdl/frames_io.hpp>
-#include <kdl/kinfam_io.hpp>
+//#include <kdl/frames_io.hpp>
+//#include <kdl/kinfam_io.hpp>
 
 
 typedef OpenRAVE::RobotBase::RobotStateSaver RobotStateSaver;
-//typedef std::pair<double, double> Pair;
-//typedef std::vector<Pair> v_Pairs;
 
 namespace or_helper
 {
@@ -173,38 +171,6 @@ TracIK::~TracIK()
   delete _tracik_solver_;
 }
 
-//bool TracIK::GetSolutionError(const double *x, void *my_func_data, double &dist_err, double &angle_err)
-//{
-//    TracIK *nlopt_p = (TracIK *) my_func_data;
-//
-//    std::vector<double> q(nlopt_p->numdofs);
-//    for (int ii = 0; ii < nlopt_p->numdofs; ii++)
-//    {
-//        q[ii] = x[ii];
-//    }
-//    nlopt_p->_pRobot->SetActiveDOFValues(q);
-//    OpenRAVE::Transform transform = nlopt_p->_pmanip->GetEndEffectorTransform();
-//    OpenRAVE::RaveVector<double> trans_v = transform.trans;
-//    OpenRAVE::RaveVector<double> rot_v = transform.rot;
-//
-//    rot_v = rot_v.normalize4();
-//    dist_err = sqrt(pow((trans_v[0] - nlopt_p->_target[0]), 2) + pow((trans_v[1] - nlopt_p->_target[1]), 2) + pow((trans_v[2] - nlopt_p->_target[2]), 2));
-//
-//    OpenRAVE::RaveVector<double> quat_curr_wrt_targ = OpenRAVE::geometry::quatMultiply(OpenRAVE::geometry::quatInverse(quat_target), rot_v);
-//    quat_curr_wrt_targ = quat_curr_wrt_targ * (1.0 / quat_curr_wrt_targ.lengthsqr4());
-//    angle_err = 2 * acos(quat_curr_wrt_targ[0]);
-//
-//    if (angle_err > M_PI)
-//    {
-//        angle_err = -2 * M_PI + angle_err;
-//    }
-//    if (angle_err < -M_PI)
-//    {
-//        angle_err = 2 * M_PI + angle_err;
-//    }
-//    angle_err = angle_err * 180.0 / M_PI;
-//    return true;
-//}
 
 OpenRAVE::RobotBase::ManipulatorPtr TracIK::GetManipulator() const
 {
@@ -222,26 +188,6 @@ bool TracIK::GetFreeParameters(std::vector<double> &v) const
     return true;
 }
 
-//void TracIK::wrapState(std::vector<double>& state)
-//{
-//    for (size_t i = 0; i < this->_indices.size(); i++)
-//    {
-//         OpenRAVE::RobotBase::JointPtr joint = _pRobot->GetJoints()[this->_indices[i]];
-//
-//         if (joint->IsCircular(0))
-//         {
-//             double v = fmod(state[i], 2.0 * M_PI);
-//             while (v <= -M_PI)
-//              v += 2.0 * M_PI;
-//             
-//             while (v > M_PI)
-//              	v -= 2.0 * M_PI;
-//             state[i] = v;
-//         }
-//    }
-//}
-
-
 KDL::JntArray toKDLJntArray(const std::vector<double>& vec)
 {
     KDL::JntArray to_ret(vec.size());
@@ -251,7 +197,6 @@ KDL::JntArray toKDLJntArray(const std::vector<double>& vec)
     }
     return to_ret;
 }
-
 
 std::vector<double> toStdVec(const KDL::JntArray& arr)
 {
@@ -290,60 +235,8 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
 
     toStdVec(tracik_result, *(result.get()));
 
-//    RobotStateSaver const saver(_pRobot, OpenRAVE::KinBody::Save_ActiveDOF | OpenRAVE::KinBody::Save_LinkTransformation);
-//    _pRobot->SetActiveDOFs(_pmanip->GetArmIndices());
-//    OpenRAVE::geometry::RaveVector<double> trans = params.GetTranslation3D();
-//    OpenRAVE::geometry::RaveVector<double> rot = params.GetRotation3D();
-//
-//    //transform to origin
-//    OpenRAVE::geometry::RaveTransform<double> transform = _pRobot->GetTransform();
-//    transform.identity();
-//    _pRobot->SetTransform(transform);
-//
-//    for (int ii = 0; ii < 3; ii++)
-//    {
-//        _target[ii] = trans[ii];
-//    }
-//    for (int ii = 3; ii < 7; ii++)
-//    {
-//        _target[ii] = rot[ii - 3];
-//    }
-//    quat_target =
-//    {   _target[3], _target[4], _target[5], _target[6]};
-//    //initialization
-//    double x[numdofs];
-//
-//    for (int ii = 0; ii < numdofs; ii++)
-//    {
-//        x[ii] = q0[ii];
-//    }
-//    double minf;
-//
-//    std::vector<double> jacobian;
-//    if (nlopt_optimize(_opt, x, &minf) < 0)
-//    {
-//        RAVELOG_DEBUG("NLOPT Optimization failed.\n");
-//        return false;
-//    }
-//
-//    double dist_err, angle_err;
-//    GetSolutionError(x, this, dist_err, angle_err);
-//    if ((dist_err > _dist_err_thres) || (angle_err > _angle_err_thres))
-//    {
-//        RAVELOG_DEBUG("Error from solution returned by NLOPT Optimization larger than pre-specified threshold.\n");
-//        return false;
-//    }
-//
     bool checkSelfCollision = !or_helper::HasFlag(filter_options, OpenRAVE::IKFO_IgnoreSelfCollisions);
     bool checkEnvCollision = or_helper::HasFlag(filter_options, OpenRAVE::IKFO_CheckEnvCollisions);
-//
-//
-//    std::vector<OpenRAVE::dReal> q_s(numdofs);
-//    for (int i = 0; i < numdofs; i++)
-//    {
-//        q_s[i] = x[i];
-//    }
-//
 
     if (!or_helper::IsSupported(filter_options))
     {
