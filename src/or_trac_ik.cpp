@@ -1,8 +1,9 @@
 #include <or_trac_ik/or_trac_ik.hpp>
 #include <limits>       // std::numeric_limits
 #include <iostream>
-#include <ros/ros.h>
 
+
+//#include <ros/ros.h>
 //#include <kdl/frames_io.hpp>
 //#include <kdl/kinfam_io.hpp>
 
@@ -109,7 +110,8 @@ KDL::Joint toKDLJoint(const OpenRAVE::KinBody::JointPtr p_joint)
     } else if (or_j_type == OpenRAVE::KinBody::JointSlider || or_j_type == OpenRAVE::KinBody::JointPrismatic) {
         kdl_type = KDL::Joint::TransAxis;
     } else {
-        ROS_FATAL_STREAM("Error: Unknown conversion to kdl for joint type " << or_j_type);
+        //ROS_FATAL_STREAM("Error: Unknown conversion to kdl for joint type " << or_j_type);
+        RAVELOG_ERROR("Error: Unknown conversion to kdl for joint type %s", or_j_type);
     }
 
     //get origin and axis from parent joint
@@ -125,16 +127,11 @@ KDL::Frame getSegmentTransformFromJoint(const OpenRAVE::KinBody::JointPtr p_join
 }
 
 
-bool TracIK::Init(OpenRAVE::RobotBase::ManipulatorConstPtr pmanip)
+
+
+
+void TracIK::InitTracIKSolver()
 {
-    _pmanip = boost::const_pointer_cast<OpenRAVE::RobotBase::Manipulator>(pmanip);
-    _pmanip_base = _pmanip->GetBase();
-    _pRobot = _pmanip->GetRobot();
-    _indices = _pmanip->GetArmIndices();
-    _numdofs = _pmanip->GetArmDOF();
-
-    InitKDLChain();
-
     KDL::JntArray l_limits(_numdofs), u_limits(_numdofs);
     for (int i = 0; i < _numdofs; i++)
     {
@@ -151,8 +148,19 @@ bool TracIK::Init(OpenRAVE::RobotBase::ManipulatorConstPtr pmanip)
     }
 
     _tracik_solver_ = new TRAC_IK::TRAC_IK(_kdl_chain, l_limits, u_limits);//, maxtime, eps, type);
+}
 
-    return true;
+
+bool TracIK::Init(OpenRAVE::RobotBase::ManipulatorConstPtr pmanip)
+{
+    _pmanip = boost::const_pointer_cast<OpenRAVE::RobotBase::Manipulator>(pmanip);
+    _pmanip_base = _pmanip->GetBase();
+    _pRobot = _pmanip->GetRobot();
+    _indices = _pmanip->GetArmIndices();
+    _numdofs = _pmanip->GetArmDOF();
+
+    InitKDLChain();
+    InitTracIKSolver();
 }
 
 
@@ -216,9 +224,9 @@ void toStdVec(const KDL::JntArray& arr, std::vector<double>& vec)
 
 bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector<double>& q0, int filter_options, boost::shared_ptr<std::vector<double> > result)
 {
-    //reinitialize robot in case bounds or anything else changed
+    //reinitialize solver in case bounds changed
     delete _tracik_solver_;
-    Init(_pmanip);
+    InitTracIKSolver();
 
 
     //target transform is transform between the base link and what is specified by params
