@@ -33,6 +33,7 @@ class TracIK : public OpenRAVE::IkSolverBase
     virtual bool SolveAll(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, std::vector<std::vector<double> >&);
 
     void InitKDLChain();
+    void InitTracIKSolver();
 
     //void wrapState(std::vector<double>& state);
 
