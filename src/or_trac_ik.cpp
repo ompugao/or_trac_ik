@@ -230,7 +230,9 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
 
 
     //target transform is transform between the base link and what is specified by params
-    KDL::Frame target_transform= toKDLFrame(_pmanip_base->GetTransform().inverse() * params.GetTransform6D());
+    //KDL::Frame target_transform= toKDLFrame(_pmanip_base->GetTransform().inverse() * params.GetTransform6D());
+    //actually that was buggy for some reason, I get the transform in params is already relative?
+    KDL::Frame target_transform= toKDLFrame(params.GetTransform6D());
     KDL::JntArray tracik_result(q0.size());
 
     int tracik_return = _tracik_solver_->CartToJnt(toKDLJntArray(q0), target_transform, tracik_result);
