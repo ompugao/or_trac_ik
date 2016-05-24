@@ -130,24 +130,23 @@ KDL::Frame getSegmentTransformFromJoint(const OpenRAVE::KinBody::JointPtr p_join
 
 
 
-void TracIK::InitTracIKSolver()
+void TracIK::InitKDLJointLimits()
 {
-    KDL::JntArray l_limits(_numdofs), u_limits(_numdofs);
+    _l_limits.resize(_numdofs);
+    _u_limits.resize(_numdofs);
     for (int i = 0; i < _numdofs; i++)
     {
         //if(limits[ii].first<-2*M_PI){
         OpenRAVE::KinBody::JointPtr p_joint = _pRobot->GetJointFromDOFIndex(_indices[i]);
         if (p_joint->IsCircular(0))
         {
-            l_limits(i)=std::numeric_limits<float>::lowest();
-            u_limits(i)=std::numeric_limits<float>::max();
+            _l_limits(i)=std::numeric_limits<float>::lowest();
+            _u_limits(i)=std::numeric_limits<float>::max();
         } else {
-            l_limits(i) = p_joint->GetLimit().first;
-            u_limits(i) = p_joint->GetLimit().second;
+            _l_limits(i) = p_joint->GetLimit().first;
+            _u_limits(i) = p_joint->GetLimit().second;
         }
     }
-
-    _tracik_solver_ = new TRAC_IK::TRAC_IK(_kdl_chain, l_limits, u_limits);//, maxtime, eps, type);
 }
 
 
@@ -160,7 +159,7 @@ bool TracIK::Init(OpenRAVE::RobotBase::ManipulatorConstPtr pmanip)
     _numdofs = _pmanip->GetArmDOF();
 
     InitKDLChain();
-    InitTracIKSolver();
+    //InitTracIKSolver();
 }
 
 
@@ -176,7 +175,7 @@ TracIK::TracIK(OpenRAVE::EnvironmentBasePtr penv) :
 
 TracIK::~TracIK()
 {
-  delete _tracik_solver_;
+//  delete _tracik_solver_;
 }
 
 
@@ -225,9 +224,8 @@ void toStdVec(const KDL::JntArray& arr, std::vector<double>& vec)
 bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector<double>& q0, int filter_options, boost::shared_ptr<std::vector<double> > result)
 {
     //reinitialize solver in case bounds changed
-    delete _tracik_solver_;
-    InitTracIKSolver();
-
+    InitKDLJointLimits();
+    TRAC_IK::TRAC_IK tracik_solver(_kdl_chain, _l_limits, _u_limits);
 
     //target transform is transform between the base link and what is specified by params
     //KDL::Frame target_transform= toKDLFrame(_pmanip_base->GetTransform().inverse() * params.GetTransform6D());
@@ -235,7 +233,7 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
     KDL::Frame target_transform= toKDLFrame(params.GetTransform6D());
     KDL::JntArray tracik_result(q0.size());
 
-    int tracik_return = _tracik_solver_->CartToJnt(toKDLJntArray(q0), target_transform, tracik_result);
+    int tracik_return = tracik_solver.CartToJnt(toKDLJntArray(q0), target_transform, tracik_result);
     //if tracik said no solution, return now
     if (tracik_return <= 0)
     {

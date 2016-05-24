@@ -1,9 +1,6 @@
 #include <openrave/plugin.h>
 #include <or_trac_ik/or_trac_ik.hpp>
 
-#include <ros/ros.h>
-
-
 OpenRAVE::InterfaceBasePtr CreateInterfaceValidated(OpenRAVE::InterfaceType type, const std::string& interfacename, std::istream& sinput, OpenRAVE::EnvironmentBasePtr penv)
 {
     if (type == OpenRAVE::PT_InverseKinematicsSolver && interfacename == "tracik")

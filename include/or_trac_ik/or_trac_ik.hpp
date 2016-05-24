@@ -4,6 +4,7 @@
 #include <trac_ik/trac_ik.hpp>
 #include <openrave/openrave.h>
 
+#include <boost/shared_ptr.hpp>
 
 
 KDL::Joint toKDLJoint(const OpenRAVE::KinBody::JointPtr p_joint);
@@ -33,7 +34,7 @@ class TracIK : public OpenRAVE::IkSolverBase
     virtual bool SolveAll(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, std::vector<std::vector<double> >&);
 
     void InitKDLChain();
-    void InitTracIKSolver();
+    void InitKDLJointLimits();
 
     //void wrapState(std::vector<double>& state);
 
@@ -51,8 +52,9 @@ class TracIK : public OpenRAVE::IkSolverBase
     int _numdofs;
 
     KDL::Chain _kdl_chain;
+    KDL::JntArray _l_limits, _u_limits;
 
-    TRAC_IK::TRAC_IK* _tracik_solver_ = NULL;
+    //TRAC_IK::TRAC_IK* _tracik_solver_ = NULL;
 };
 
 
