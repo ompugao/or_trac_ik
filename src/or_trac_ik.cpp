@@ -41,6 +41,9 @@ void TracIK::InitKDLChain()
         _kdl_chain.addSegment(KDL::Segment(toKDLJoint(p_joint), getSegmentTransformFromJoint(p_joint)));
     }
 
+    //there may be a fixed transform between the end effector and last link
+    _ee_to_last_joint = _pmanip->GetEndEffectorTransform().inverse() * _pRobot->GetJointFromDOFIndex(_indices.size()-1)->GetHierarchyChildLink()->GetTransform();
+
 //    //TEST CHAIN
 //    // PRINT TO MAKE SURE WE GET THE SAME AS READING URDF
 //    std::vector<KDL::Segment> chain_segs = _kdl_chain.segments;
@@ -230,7 +233,7 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
     //target transform is transform between the base link and what is specified by params
     //KDL::Frame target_transform= toKDLFrame(_pmanip_base->GetTransform().inverse() * params.GetTransform6D());
     //actually that was buggy for some reason, I get the transform in params is already relative?
-    KDL::Frame target_transform= toKDLFrame(params.GetTransform6D());
+    KDL::Frame target_transform= toKDLFrame(params.GetTransform6D() * _ee_to_last_joint);
     KDL::JntArray tracik_result(q0.size());
 
     int tracik_return = tracik_solver.CartToJnt(toKDLJntArray(q0), target_transform, tracik_result);
