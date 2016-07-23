@@ -48,6 +48,7 @@ class TracIK : public OpenRAVE::IkSolverBase
     OpenRAVE::RobotBase::ManipulatorPtr  _pmanip;
     OpenRAVE::RobotBasePtr _pRobot;
     OpenRAVE::KinBody::LinkPtr  _pmanip_base;
+    OpenRAVE::Transform _ee_to_last_joint;
     std::vector<int> _indices;
     int _numdofs;
 
