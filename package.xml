@@ -15,10 +15,11 @@
   <build_depend>trac_ik_lib</build_depend>
   <build_depend>openrave</build_depend>
   <build_depend>openrave_catkin</build_depend>
+  <build_depend>eigen_conversions</build_depend>
   <run_depend>trac_ik_lib</run_depend>
   <run_depend>openrave</run_depend>
   <run_depend>openrave_catkin</run_depend>
-
+  <run_depend>eigen_conversions</run_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
