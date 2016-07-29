@@ -2,6 +2,7 @@
 #include <limits>       // std::numeric_limits
 #include <iostream>
 
+#include <ros/console.h>
 
 //#include <ros/ros.h>
 //#include <kdl/frames_io.hpp>
@@ -130,9 +131,6 @@ KDL::Frame getSegmentTransformFromJoint(const OpenRAVE::KinBody::JointPtr p_join
 }
 
 
-
-
-
 void TracIK::InitKDLJointLimits()
 {
     _l_limits.resize(_numdofs);
@@ -163,6 +161,7 @@ bool TracIK::Init(OpenRAVE::RobotBase::ManipulatorConstPtr pmanip)
 
     InitKDLChain();
     //InitTracIKSolver();
+    return true;
 }
 
 
@@ -228,6 +227,8 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
 {
     //reinitialize solver in case bounds changed
     InitKDLJointLimits();
+
+    //_ee_to_last_joint = _pmanip->GetEndEffectorTransform().inverse() * _pRobot->GetJointFromDOFIndex(_indices.size()-1)->GetHierarchyChildLink()->GetTransform();
     TRAC_IK::TRAC_IK tracik_solver(_kdl_chain, _l_limits, _u_limits);
 
     //target transform is transform between the base link and what is specified by params
