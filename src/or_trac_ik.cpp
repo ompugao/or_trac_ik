@@ -239,13 +239,33 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
 
     int tracik_return = tracik_solver.CartToJnt(toKDLJntArray(q0), target_transform, tracik_result);
     //if tracik said no solution, return now
+    //
     if (tracik_return <= 0)
     {
         return false;
     }
 
-
+    //std::vector<double> q0_copy(q0);
     toStdVec(tracik_result, *(result.get()));
+
+//    for (int i = 0; i < _numdofs; i++)
+//    {
+//        //if(limits[ii].first<-2*M_PI){
+//        OpenRAVE::KinBody::JointPtr p_joint = _pRobot->GetJointFromDOFIndex(_indices[i]);
+//        if (p_joint->IsCircular(0))
+//        {
+//            double result_this_joint = result->at(i);
+//            while ( std::abs(q0_copy[i] - (result_this_joint + 2.*M_PI)) < std::abs(q0_copy[i] - result_this_joint))
+//            {
+//                result_this_joint += 2.*M_PI;
+//            }
+//            while ( std::abs(q0_copy[i] - (result_this_joint - 2.*M_PI)) < std::abs(q0_copy[i] - result_this_joint))
+//            {
+//                result_this_joint -= 2.*M_PI;
+//            }
+//            result->at(i) = result_this_joint;
+//        }
+//    }
 
     bool checkSelfCollision = !or_helper::HasFlag(filter_options, OpenRAVE::IKFO_IgnoreSelfCollisions);
     bool checkEnvCollision = or_helper::HasFlag(filter_options, OpenRAVE::IKFO_CheckEnvCollisions);
