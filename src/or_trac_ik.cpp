@@ -135,6 +135,7 @@ void TracIK::InitKDLJointLimits()
 {
     _l_limits.resize(_numdofs);
     _u_limits.resize(_numdofs);
+    _is_continous_joint.resize(_numdofs);
     for (int i = 0; i < _numdofs; i++)
     {
         //if(limits[ii].first<-2*M_PI){
@@ -143,9 +144,11 @@ void TracIK::InitKDLJointLimits()
         {
             _l_limits(i)=std::numeric_limits<float>::lowest();
             _u_limits(i)=std::numeric_limits<float>::max();
+            _is_continous_joint[i] = true;
         } else {
             _l_limits(i) = p_joint->GetLimit().first;
             _u_limits(i) = p_joint->GetLimit().second;
+            _is_continous_joint[i] = false;
         }
     }
 }
@@ -227,7 +230,11 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization& params, const std::vector
 {
     //reinitialize solver in case bounds changed
     InitKDLJointLimits();
+    return Solve_NoInit(params, q0, filter_options, result);
+}
 
+bool TracIK::Solve_NoInit(const OpenRAVE::IkParameterization& params, const std::vector<double>& q0, int filter_options, boost::shared_ptr<std::vector<double> > result)
+{
     //_ee_to_last_joint = _pmanip->GetEndEffectorTransform().inverse() * _pRobot->GetJointFromDOFIndex(_indices.size()-1)->GetHierarchyChildLink()->GetTransform();
     TRAC_IK::TRAC_IK tracik_solver(_kdl_chain, _l_limits, _u_limits);
 
@@ -313,70 +320,47 @@ bool TracIK::Solve(const OpenRAVE::IkParameterization&, const std::vector<double
 
 bool TracIK::SolveAll(const OpenRAVE::IkParameterization& param, int filterOptions, std::vector<std::vector<double> >& returnValues)
 {
-    std::vector<double> randSample(_numdofs, 0.0);
-    std::vector<double>* solution = new std::vector<double>();
-    for (int j = 0; j < _numdofs; j++)
-    {
-        solution->push_back(0.0);
-    }
-    boost::shared_ptr<std::vector<double> > solutionPtr(solution);
-    bool foundOne = false;
-    // Try 1K random samples as starting points
-    for (size_t randomSamples = 0; randomSamples < 1000; randomSamples++)
-    {
-        // Sample between -PI and PI
-        for (int j = 0; j < _numdofs; j++)
-        {
-            randSample[j] = 2.0 * (((double)(rand()) / (double)(RAND_MAX)) * M_PI - M_PI * 0.5);
-        }
-
-        for (int j = 0; j < _numdofs; j++)
-        {
-            (*solution)[j] = 0.0;
-        }
-        // Solve for this random seed
-        if (Solve(param, randSample, filterOptions, solutionPtr) )
-        {
-            bool isNear = false;
-            // Check all the return values to see if we already got a solution like this one
-            for (size_t s = 0; s < returnValues.size(); s++)
-            {
-                bool nearSolution = true;
-                const std::vector<double>& currentSol = returnValues[s];
-                for (int j = 0; j < _numdofs; j++)
-                {
-                    double diff = fabs(currentSol[j] - (*solution)[j]);
-
-                    if (diff > 1e-1)
-                    {
-                        nearSolution = false;
-                        break;
-                    }
-                }
-
-                if (nearSolution)
-                {
-                    isNear = true;
-                    break;
-                }
-            }
-
-            // If this is far enough away from other solutions, accept it.
-            if (!isNear)
-            {
-                foundOne = true;
-                returnValues.push_back(*solution);
-            }
-        }
-    }
-
-    return foundOne;
-    //RAVELOG_ERROR("WARNING: Function bool SolveAll(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, std::vector<std::vector<double> >&)not implemented in TracIK.\n");
-    //return false;
+    std::vector<double> q0(_numdofs, 0.0);
+    return SolveAll(param, q0, filterOptions, returnValues);
 }
 
 bool TracIK::SolveAll(const OpenRAVE::IkParameterization& param, const std::vector<double>& q0, int filterOptions, std::vector<std::vector<double> >& returnValues)
 {
-    return SolveAll(param, filterOptions, returnValues);
-}
+    //reinitialize solver in case bounds changed
+    InitKDLJointLimits();
 
+    std::vector<double> randSample(_numdofs, 0.0);
+    std::vector<double>* solution = new std::vector<double>(_numdofs);
+    //for (int j = 0; j < _numdofs; j++)
+    //{
+    //    solution->push_back(0.0);
+    //}
+    boost::shared_ptr<std::vector<double> > solutionPtr(solution);
+
+    // Try 1K random samples as starting points
+    for (size_t randomSamples = 0; randomSamples < 1000; randomSamples++)
+    {
+        // Sample joint values
+        for (int j = 0; j < _numdofs; j++)
+        {
+            // if continuous, sample between -pi and pi from current
+            if (_is_continous_joint[j])
+            {
+              randSample[j] = 2.0 * (((double)(rand()) / (double)(RAND_MAX)) * M_PI - M_PI * 0.5) + q0[j];
+            } else {
+
+              randSample[j] = ((double)(rand()) / (double)(RAND_MAX)) * (_u_limits(j)-_l_limits(j)) - _l_limits(j);
+            // otherwise, sample between limits
+
+            }
+        }
+
+        if (Solve_NoInit(param, randSample, filterOptions, solutionPtr) )
+        {
+            returnValues.push_back(*solution);
+
+        }
+
+    }
+    return !returnValues.empty();
+}

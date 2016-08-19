@@ -29,6 +29,7 @@ class TracIK : public OpenRAVE::IkSolverBase
     virtual int GetNumFreeParameters() const;
     virtual bool GetFreeParameters(std::vector<double>&) const;
     virtual bool Solve(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, boost::shared_ptr<std::vector<double> >);
+    bool Solve_NoInit(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, boost::shared_ptr<std::vector<double> >);
     virtual bool Solve(const OpenRAVE::IkParameterization&, const std::vector<double>&, const std::vector<double>&, int, boost::shared_ptr<std::vector<double> >);
     virtual bool SolveAll(const OpenRAVE::IkParameterization&, int, std::vector<std::vector<double> >&);
     virtual bool SolveAll(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, std::vector<std::vector<double> >&);
@@ -53,6 +54,7 @@ class TracIK : public OpenRAVE::IkSolverBase
     int _numdofs;
 
     KDL::Chain _kdl_chain;
+    std::vector<bool> _is_continous_joint;
     KDL::JntArray _l_limits, _u_limits;
 
     //TRAC_IK::TRAC_IK* _tracik_solver_ = NULL;
