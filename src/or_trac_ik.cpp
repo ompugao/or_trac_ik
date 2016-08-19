@@ -331,10 +331,6 @@ bool TracIK::SolveAll(const OpenRAVE::IkParameterization& param, const std::vect
 
     std::vector<double> randSample(_numdofs, 0.0);
     std::vector<double>* solution = new std::vector<double>(_numdofs);
-    //for (int j = 0; j < _numdofs; j++)
-    //{
-    //    solution->push_back(0.0);
-    //}
     boost::shared_ptr<std::vector<double> > solutionPtr(solution);
 
     // Try 1K random samples as starting points
@@ -348,17 +344,14 @@ bool TracIK::SolveAll(const OpenRAVE::IkParameterization& param, const std::vect
             {
               randSample[j] = 2.0 * (((double)(rand()) / (double)(RAND_MAX)) * M_PI - M_PI * 0.5) + q0[j];
             } else {
-
+              // otherwise, sample between limits
               randSample[j] = ((double)(rand()) / (double)(RAND_MAX)) * (_u_limits(j)-_l_limits(j)) - _l_limits(j);
-            // otherwise, sample between limits
-
             }
         }
 
         if (Solve_NoInit(param, randSample, filterOptions, solutionPtr) )
         {
             returnValues.push_back(*solution);
-
         }
 
     }
