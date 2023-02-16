@@ -43,7 +43,7 @@ void TracIK::InitKDLChain()
     }
 
     //there may be a fixed transform between the end effector and last link
-    _ee_to_last_joint = _pmanip->GetEndEffectorTransform().inverse() * _pRobot->GetJointFromDOFIndex(_indices.size()-1)->GetHierarchyChildLink()->GetTransform();
+    _ee_to_last_joint = _pmanip->GetTransform().inverse() * _pRobot->GetJointFromDOFIndex(_indices.size()-1)->GetHierarchyChildLink()->GetTransform();
 
 //    //TEST CHAIN
 //    // PRINT TO MAKE SURE WE GET THE SAME AS READING URDF
@@ -197,6 +197,11 @@ int TracIK::GetNumFreeParameters() const
 bool TracIK::GetFreeParameters(std::vector<double> &v) const
 {
     v.clear();
+    return true;
+}
+bool TracIK::GetFreeIndices(std::vector<int>& freeindices) const
+{
+    freeindices.clear();
     return true;
 }
 

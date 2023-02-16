@@ -28,6 +28,7 @@ class TracIK : public OpenRAVE::IkSolverBase
     virtual OpenRAVE::RobotBase::ManipulatorPtr GetManipulator() const;
     virtual int GetNumFreeParameters() const;
     virtual bool GetFreeParameters(std::vector<double>&) const;
+    virtual bool GetFreeIndices(std::vector<int>&) const;
     virtual bool Solve(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, boost::shared_ptr<std::vector<double> >);
     bool Solve_NoInit(const OpenRAVE::IkParameterization&, const std::vector<double>&, int, boost::shared_ptr<std::vector<double> >);
     virtual bool Solve(const OpenRAVE::IkParameterization&, const std::vector<double>&, const std::vector<double>&, int, boost::shared_ptr<std::vector<double> >);
